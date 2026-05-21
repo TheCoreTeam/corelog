@@ -40,7 +40,7 @@ endif()
 # Must be included AFTER find_package(CUDAToolkit) and BEFORE add_library.
 # ---------------------------------------------------------------------------
 if(CORELOG_WITH_CUDA)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external/clangd-cuda/cmake)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
     include(ClangdCudaCompileDb)
 endif()
 
