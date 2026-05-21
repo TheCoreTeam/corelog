@@ -47,6 +47,7 @@ Checks: >
   -cppcoreguidelines-macro-to-enum,
   -cppcoreguidelines-owning-memory,
   -bugprone-sizeof-expression,
+  -clang-diagnostic-unused-command-line-argument,
 WarningsAsErrors: >
   google-runtime-int,
   -clang-diagnostic-error,
