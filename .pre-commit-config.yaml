@@ -1,0 +1,51 @@
+repos:
+  - repo: local
+    hooks:
+      - id: text-hygiene
+        name: text hygiene
+        entry: scripts/run_text_hygiene_precommit.py
+        language: system
+        types: [text]
+        pass_filenames: true
+
+      - id: check-yaml
+        name: check yaml
+        entry: scripts/run_check_yaml_precommit.py
+        language: system
+        types: [yaml]
+        pass_filenames: true
+
+      - id: check-added-large-files
+        name: check added large files
+        entry: scripts/run_check_added_large_files_precommit.py --maxkb=1024
+        language: system
+        pass_filenames: true
+
+      - id: file-suffix-lint
+        name: file suffix lint
+        entry: scripts/run_check_file_suffix_precommit.py
+        language: system
+        pass_filenames: true
+
+      - id: include-path-lint
+        name: include path lint
+        entry: scripts/run_include_path_lint_precommit.py
+        language: system
+        files: ^(include|src)/
+        types_or: [c++, cuda]
+        pass_filenames: true
+
+      - id: clang-format
+        name: clang-format
+        entry: clang-format --style=file -i
+        language: system
+        types_or: [c++, cuda]
+        pass_filenames: true
+
+      - id: clang-tidy
+        name: clang-tidy
+        entry: scripts/run_clang_tidy_precommit.sh
+        language: system
+        types_or: [c++, cuda]
+        pass_filenames: true
+        require_serial: true

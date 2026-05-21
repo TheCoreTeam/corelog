@@ -1,0 +1,8 @@
+build/
+build-*/
+.clangd
+
+# FetchContent downloaded deps (re-downloadable)
+external/*-src/
+external/*-build/
+external/*-subbuild/

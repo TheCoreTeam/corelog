@@ -1,0 +1,112 @@
+Checks: >
+  google-*,
+  cppcoreguidelines-*,
+  performance-*,
+  modernize-use-override,
+  modernize-use-nullptr,
+  modernize-use-default-member-init,
+  modernize-loop-convert,
+  modernize-use-emplace,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-deprecated-headers,
+  modernize-make-unique,
+  modernize-use-structured-binding,
+  bugprone-use-after-move,
+  bugprone-unused-return-value,
+  bugprone-swapped-arguments,
+  bugprone-suspicious-string-compare,
+  bugprone-dangling-handle,
+  bugprone-macro-repeated-side-effects,
+  bugprone-macro-parentheses,
+  bugprone-suspicious-semicolon,
+  bugprone-narrowing-conversions,
+  bugprone-implicit-widening-of-multiplication-result,
+  bugprone-integer-division,
+  bugprone-sizeof-expression,
+  readability-identifier-naming,
+  readability-braces-around-statements,
+  readability-make-member-function-const,
+  readability-redundant-*,
+  readability-string-compare,
+  -cppcoreguidelines-avoid-do-while,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -readability-redundant-typename,
+  -performance-enum-size,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-macro-to-enum,
+  -cppcoreguidelines-owning-memory,
+  -bugprone-sizeof-expression,
+WarningsAsErrors: >
+  google-runtime-int,
+  -clang-diagnostic-error,
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantPrefix
+    value: 'k'
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.FunctionCase
+    value: CamelCase
+  - key: readability-identifier-naming.MethodCase
+    value: CamelCase
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprVariablePrefix
+    value: 'k'
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberSuffix
+    value: '_'
+  - key: readability-identifier-naming.PublicMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PublicMemberSuffix
+    value: ''
+  - key: readability-identifier-naming.ConstantMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantMemberSuffix
+    value: '_'
+  - key: readability-identifier-naming.StaticConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.StaticConstantPrefix
+    value: 'k'
+  - key: readability-identifier-naming.ConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantPrefix
+    value: 'k'
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+HeaderFilterRegex: '(^|.*/)(include|src|test|example|benchmark)/.*'
+ExcludeHeaderFilterRegex: '(^|.*/)(external|third-party|third_party|build|build-.*|cmake-build-.*|_deps)/.*'
+SystemHeaders: false
