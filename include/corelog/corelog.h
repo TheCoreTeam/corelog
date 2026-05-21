@@ -55,17 +55,18 @@ concept StreamableLogValue = requires(std::ostringstream& out, const T& value) {
 
 class LogText {
  public:
-  LogText(const char* message) noexcept
+  explicit LogText(const char* message) noexcept
       : view_(message != nullptr ? std::string_view(message) : std::string_view{}) {}
 
-  LogText(char* message) noexcept
+  explicit LogText(char* message) noexcept
       : view_(message != nullptr ? std::string_view(message) : std::string_view{}) {}
 
-  LogText(std::string_view message) noexcept : view_(message) {}
+  explicit LogText(std::string_view message) noexcept : view_(message) {}
 
-  LogText(const std::string& message) noexcept : view_(message) {}
+  explicit LogText(const std::string& message) noexcept : view_(message) {}
 
-  LogText(std::string&& message) noexcept : storage_(std::move(message)), view_(storage_) {}
+  explicit LogText(std::string&& message) noexcept
+      : storage_(std::move(message)), view_(storage_) {}
 
   template <typename T>
     requires(!std::is_same_v<std::remove_cvref_t<T>, LogText> &&
@@ -74,7 +75,7 @@ class LogText {
              !std::is_same_v<std::remove_cvref_t<T>, std::string> && StreamableLogValue<T>)
   explicit LogText(T&& value) : storage_(StreamToString(std::forward<T>(value))), view_(storage_) {}
 
-  std::string_view view() const noexcept { return view_; }
+  std::string_view View() const noexcept { return view_; }
 
  private:
   template <typename T>
@@ -116,7 +117,7 @@ CORELOG_API void InfoMessage(std::string_view message, const char* file, int lin
     if (!(statement)) {                                                                    \
       auto&& corelog_detail = (detail_arg);                                                \
       const auto corelog_detail_text = ::corelog::detail::ToLogText(corelog_detail);       \
-      ::corelog::detail::AssertionFailed(#statement, corelog_detail_text.view(), __FILE__, \
+      ::corelog::detail::AssertionFailed(#statement, corelog_detail_text.View(), __FILE__, \
                                          __LINE__, __func__);                              \
     }                                                                                      \
   } while (false)
@@ -126,7 +127,7 @@ CORELOG_API void InfoMessage(std::string_view message, const char* file, int lin
     if (!(statement)) {                                                                            \
       auto&& corelog_detail = (detail_arg);                                                        \
       const auto corelog_detail_text = ::corelog::detail::ToLogText(corelog_detail);               \
-      ::corelog::detail::WarningFailed(#statement, corelog_detail_text.view(), __FILE__, __LINE__, \
+      ::corelog::detail::WarningFailed(#statement, corelog_detail_text.View(), __FILE__, __LINE__, \
                                        __func__);                                                  \
     }                                                                                              \
   } while (false)
@@ -135,5 +136,5 @@ CORELOG_API void InfoMessage(std::string_view message, const char* file, int lin
   do {                                                                                         \
     auto&& corelog_message = (statement);                                                      \
     const auto corelog_message_text = ::corelog::detail::ToLogText(corelog_message);           \
-    ::corelog::detail::InfoMessage(corelog_message_text.view(), __FILE__, __LINE__, __func__); \
+    ::corelog::detail::InfoMessage(corelog_message_text.View(), __FILE__, __LINE__, __func__); \
   } while (false)

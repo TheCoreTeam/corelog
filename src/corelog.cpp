@@ -20,22 +20,21 @@ struct LogState {
   corelog::LogSink sink;
 };
 
-SpdlogShutdownGuard g_spdlog_shutdown_guard;
-
 LogState& GetLogState() {
   static LogState state;
   return state;
 }
 
 spdlog::logger& GetDefaultLogger() {
+  static SpdlogShutdownGuard shutdown_guard;
   static auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   static spdlog::logger logger{"CORELOG", sink};
-  static const auto configured = [] {
+  static const auto kConfigured = [] {
     logger.set_level(spdlog::level::info);
     logger.flush_on(spdlog::level::critical);
     return true;
   }();
-  static_cast<void>(configured);
+  static_cast<void>(kConfigured);
   return logger;
 }
 

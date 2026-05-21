@@ -32,6 +32,9 @@ class LogSinkScope {
   LogSinkScope() = default;
   ~LogSinkScope() { corelog::ResetLogSink(); }
 
+  LogSinkScope(LogSinkScope&&) = default;
+  LogSinkScope& operator=(LogSinkScope&&) = default;
+
   LogSinkScope(const LogSinkScope&) = delete;
   LogSinkScope& operator=(const LogSinkScope&) = delete;
 };

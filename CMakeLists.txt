@@ -27,6 +27,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 
 # ---------------------------------------------------------------------------
+# clangd-cuda: compilation database for clangd/clang-tidy
+# Must be included BEFORE add_library so targets appear in compile_commands.json.
+# ---------------------------------------------------------------------------
+find_package(CUDAToolkit)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(ClangdCudaCompileDb)
+
+# ---------------------------------------------------------------------------
 # corelog library
 # ---------------------------------------------------------------------------
 add_library(corelog)
@@ -40,6 +48,7 @@ target_include_directories(corelog
 )
 
 target_link_libraries(corelog PUBLIC spdlog::spdlog)
+clangd_cuda_attach(corelog)
 
 # ---------------------------------------------------------------------------
 # Tests
