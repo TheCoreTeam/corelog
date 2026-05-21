@@ -1,21 +1,13 @@
-#include <corelog/corelog.h>
+#pragma once
 
-#include <cuda_runtime.h>
+#include "corelog/corelog.h"
+
 #include <cublas_v2.h>
 
-#if defined(CORELOG_WITH_NCCL)
-#include <nccl.h>
-#endif
-
 namespace corelog {
-
 namespace detail {
 
-const char* DescribeCudartStatus(int code) noexcept {
-  return cudaGetErrorString(static_cast<cudaError_t>(code));
-}
-
-const char* DescribeCublasStatus(int code) noexcept {
+inline const char* DescribeCublasStatus(int code) noexcept {
   switch (static_cast<cublasStatus_t>(code)) {
     case CUBLAS_STATUS_SUCCESS:
       return "CUBLAS_STATUS_SUCCESS";
@@ -46,15 +38,15 @@ const char* DescribeCublasStatus(int code) noexcept {
   }
 }
 
-const char* DescribeNcclStatus(int code) noexcept {
-#if defined(CORELOG_WITH_NCCL)
-  return ncclGetErrorString(static_cast<ncclResult_t>(code));
-#else
-  (void)code;
-  return "NCCL_DISABLED";
-#endif
-}
-
 }  // namespace detail
-
 }  // namespace corelog
+
+#define CORELOG_CHECK_CUBLAS(statement)                                                              \
+  do {                                                                                             \
+    const auto corelog_code = (statement);                                                         \
+    if (static_cast<int>(corelog_code) != 0) {                                                     \
+      ::corelog::detail::AssertionFailed(                                                          \
+          #statement, ::corelog::detail::DescribeCublasStatus(static_cast<int>(corelog_code)),     \
+          __FILE__, __LINE__, __func__);                                                           \
+    }                                                                                              \
+  } while (false)
