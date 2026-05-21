@@ -1,5 +1,4 @@
 #include <corelog/corelog.h>
-
 #include <cstdlib>
 #include <mutex>
 #include <spdlog/fmt/fmt.h>

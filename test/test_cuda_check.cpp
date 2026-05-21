@@ -1,5 +1,4 @@
 #include <corelog/cuda_check.h>
-
 #include <gtest/gtest.h>
 
 TEST(CudaCheck, SuccessCodeDoesNotThrow) {

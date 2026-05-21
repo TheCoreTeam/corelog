@@ -100,8 +100,8 @@ inline LogText ToLogText(T&& message) {
 }
 
 [[noreturn]] CORELOG_API void AssertionFailed(const char* statement, std::string_view detail,
-                                               const char* file, int line,
-                                               const char* function) noexcept;
+                                              const char* file, int line,
+                                              const char* function) noexcept;
 CORELOG_API void WarningFailed(const char* statement, std::string_view detail, const char* file,
                                int line, const char* function) noexcept;
 CORELOG_API void InfoMessage(std::string_view message, const char* file, int line,
@@ -111,29 +111,29 @@ CORELOG_API void InfoMessage(std::string_view message, const char* file, int lin
 
 }  // namespace corelog
 
-#define CORELOG_ASSERT_TRUE(statement, detail_arg)                                                   \
-  do {                                                                                               \
-    if (!(statement)) {                                                                              \
-      auto&& corelog_detail = (detail_arg);                                                          \
-      const auto corelog_detail_text = ::corelog::detail::ToLogText(corelog_detail);                 \
-      ::corelog::detail::AssertionFailed(#statement, corelog_detail_text.view(), __FILE__,           \
-                                         __LINE__, __func__);                                        \
-    }                                                                                                \
+#define CORELOG_ASSERT_TRUE(statement, detail_arg)                                         \
+  do {                                                                                     \
+    if (!(statement)) {                                                                    \
+      auto&& corelog_detail = (detail_arg);                                                \
+      const auto corelog_detail_text = ::corelog::detail::ToLogText(corelog_detail);       \
+      ::corelog::detail::AssertionFailed(#statement, corelog_detail_text.view(), __FILE__, \
+                                         __LINE__, __func__);                              \
+    }                                                                                      \
   } while (false)
 
-#define CORELOG_WARN_TRUE(statement, detail_arg)                                                     \
-  do {                                                                                               \
-    if (!(statement)) {                                                                              \
-      auto&& corelog_detail = (detail_arg);                                                          \
-      const auto corelog_detail_text = ::corelog::detail::ToLogText(corelog_detail);                 \
-      ::corelog::detail::WarningFailed(#statement, corelog_detail_text.view(), __FILE__, __LINE__,   \
-                                       __func__);                                                    \
-    }                                                                                                \
+#define CORELOG_WARN_TRUE(statement, detail_arg)                                                   \
+  do {                                                                                             \
+    if (!(statement)) {                                                                            \
+      auto&& corelog_detail = (detail_arg);                                                        \
+      const auto corelog_detail_text = ::corelog::detail::ToLogText(corelog_detail);               \
+      ::corelog::detail::WarningFailed(#statement, corelog_detail_text.view(), __FILE__, __LINE__, \
+                                       __func__);                                                  \
+    }                                                                                              \
   } while (false)
 
-#define CORELOG_INFO(statement)                                                                      \
-  do {                                                                                               \
-    auto&& corelog_message = (statement);                                                            \
-    const auto corelog_message_text = ::corelog::detail::ToLogText(corelog_message);                 \
-    ::corelog::detail::InfoMessage(corelog_message_text.view(), __FILE__, __LINE__, __func__);       \
+#define CORELOG_INFO(statement)                                                                \
+  do {                                                                                         \
+    auto&& corelog_message = (statement);                                                      \
+    const auto corelog_message_text = ::corelog::detail::ToLogText(corelog_message);           \
+    ::corelog::detail::InfoMessage(corelog_message_text.view(), __FILE__, __LINE__, __func__); \
   } while (false)

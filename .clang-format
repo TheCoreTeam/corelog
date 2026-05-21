@@ -9,9 +9,8 @@ IncludeCategories:
     Priority: 2
   - Regex: '^<'
     Priority: 1
-  # Project headers: replace 'yourproject' with the top-level include namespace
-  # used in your project (e.g. '^"foo/' for #include "foo/bar.h").
-  - Regex: '^"yourproject/'
+  # Project headers
+  - Regex: '^"corelog/'
     Priority: 3
   - Regex: '.*'
     Priority: 4

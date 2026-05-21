@@ -1,8 +1,8 @@
 #pragma once
 
-#include "corelog/corelog.h"
-
 #include <mpi.h>
+
+#include "corelog/corelog.h"
 
 namespace corelog {
 namespace detail {
@@ -25,12 +25,12 @@ inline const char* DescribeMpiStatus(int code) noexcept {
 }  // namespace detail
 }  // namespace corelog
 
-#define CORELOG_CHECK_MPI(statement)                                                                 \
-  do {                                                                                             \
-    const auto corelog_code = (statement);                                                         \
-    if (static_cast<int>(corelog_code) != 0) {                                                     \
-      ::corelog::detail::AssertionFailed(                                                          \
-          #statement, ::corelog::detail::DescribeMpiStatus(static_cast<int>(corelog_code)),        \
-          __FILE__, __LINE__, __func__);                                                           \
-    }                                                                                              \
+#define CORELOG_CHECK_MPI(statement)                                                        \
+  do {                                                                                      \
+    const auto corelog_code = (statement);                                                  \
+    if (static_cast<int>(corelog_code) != 0) {                                              \
+      ::corelog::detail::AssertionFailed(                                                   \
+          #statement, ::corelog::detail::DescribeMpiStatus(static_cast<int>(corelog_code)), \
+          __FILE__, __LINE__, __func__);                                                    \
+    }                                                                                       \
   } while (false)

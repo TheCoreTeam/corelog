@@ -1,10 +1,7 @@
 #include <corelog/cublas_check.h>
-
 #include <gtest/gtest.h>
 
-TEST(CublasCheck, SuccessCodeDoesNotThrow) {
-  CORELOG_CHECK_CUBLAS(CUBLAS_STATUS_SUCCESS);
-}
+TEST(CublasCheck, SuccessCodeDoesNotThrow) { CORELOG_CHECK_CUBLAS(CUBLAS_STATUS_SUCCESS); }
 
 TEST(CublasCheck, ErrorDescriptionMapsCorrectly) {
   EXPECT_STREQ(::corelog::detail::DescribeCublasStatus(CUBLAS_STATUS_SUCCESS),
