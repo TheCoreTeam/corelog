@@ -18,7 +18,7 @@ if(CUDAToolkit_FOUND)
     target_link_libraries(test_cuda_check PRIVATE corelog::corelog CUDA::cudart GTest::gtest_main)
 
     add_executable(test_cublas_check test_cublas_check.cpp)
-    target_link_libraries(test_cublas_check PRIVATE corelog::corelog CUDA::cudart GTest::gtest_main)
+    target_link_libraries(test_cublas_check PRIVATE corelog::corelog CUDA::cudart CUDA::cublas GTest::gtest_main)
 else()
     message(WARNING "CUDAToolkit not found — skipping CUDA/cuBLAS tests")
 endif()
