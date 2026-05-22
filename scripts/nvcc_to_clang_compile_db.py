@@ -255,9 +255,19 @@ def derive_cuda_arguments(
     if cuda_path:
         add_flag(flags, seen, f"--cuda-path={cuda_path}")
 
-    for cuda_include_dir in (cuda_include_dirs or []):
-        if cuda_include_dir:
-            add_flag(flags, seen, "-isystem", cuda_include_dir)
+    def _resolve_include_paths_from_flags(flag_list: list[str]) -> set[str]:
+        """Extract resolved absolute paths from -I and -isystem flags."""
+        paths: set[str] = set()
+        for i, f in enumerate(flag_list):
+            if f == "-I" and i + 1 < len(flag_list):
+                paths.add(str(Path(flag_list[i + 1]).resolve()))
+            elif f.startswith("-I") and f != "-I":
+                paths.add(str(Path(f[2:]).resolve()))
+            elif f == "-isystem" and i + 1 < len(flag_list):
+                paths.add(str(Path(flag_list[i + 1]).resolve()))
+            elif f.startswith("-isystem") and f != "-isystem":
+                paths.add(str(Path(f[len("-isystem"):]).resolve()))
+        return paths
 
     def feed_tokens(items: list[str]) -> None:
         index = 0
@@ -378,11 +388,24 @@ def derive_cuda_arguments(
     tokens = tokenize(entry)
     feed_tokens(tokens[1:])
 
+    # Inject auto-detected include dirs that are not already covered by the
+    # original compile command to work around CMake generator expressions that
+    # may have failed to expand for CUDA response files.
+    covered_paths = _resolve_include_paths_from_flags(flags)
+    for cuda_include_dir in (cuda_include_dirs or []):
+        if cuda_include_dir:
+            resolved = str(Path(cuda_include_dir).resolve())
+            if resolved not in covered_paths:
+                add_flag(flags, seen, "-isystem", cuda_include_dir)
+
     add_flag(flags, seen, "-x", "cuda")
     add_flag(flags, seen, "--cuda-host-only")
     add_flag(flags, seen, "-Wno-unknown-cuda-version")
 
-    arguments = [clang_driver, *flags, "-c", source_path]
+    arguments = [clang_driver, *flags]
+    if "-c" not in flags:
+        arguments.append("-c")
+    arguments.append(source_path)
     if output_path:
         arguments.extend(["-o", output_path])
     return sanitize_tooling_arguments(arguments)
@@ -399,6 +422,11 @@ def transform_entry(
     if file_path.suffix != ".cu":
         transformed.pop("command", None)
         args = sanitize_tooling_arguments(tokenize(entry))
+        # Project headers (platform.h, robust_kernel.h) use CUDA keywords
+        # __host__ / __device__ / __forceinline__ as function qualifiers.
+        # When clangd parses a .cpp file these keywords are not defined.
+        # Stub them out so clangd can parse the translation unit.
+        args = [args[0], "-D__host__=", "-D__device__=", "-D__forceinline__=inline"] + args[1:]
         transformed["arguments"] = _promote_cuda_include_to_isystem(
             args, cuda_include_dirs
         )

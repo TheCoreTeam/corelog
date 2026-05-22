@@ -197,12 +197,49 @@ fi
 
 common_args=(
   "--quiet"
+  "--config-file=$repo_root/.clang-tidy"
 )
 common_args+=("${extra_tidy_args[@]}")
 
+# Only errors/warnings from these first-party directories are fatal.
+# Built from LINT_DIRS plus include/ (headers are not linted directly but
+# errors in them surface through the translation units that include them).
+_first_party_dirs=("${repo_root}/include/")
+for _d in "${LINT_DIRS[@]}"; do
+  _first_party_dirs+=("${repo_root}/${_d}/")
+done
+unset _d
+
+_is_first_party_error() {
+  local line="$1"
+  if [[ "$line" =~ ^([^:]+):[0-9]+:[0-9]+:[[:space:]]*(error|warning) ]]; then
+    local file_path="${BASH_REMATCH[1]}"
+    if [[ "$file_path" != /* ]]; then
+      file_path="${repo_root}/${file_path}"
+    fi
+    for prefix in "${_first_party_dirs[@]}"; do
+      if [[ "$file_path" == "$prefix"* ]]; then
+        return 0  # first-party error/warning
+      fi
+    done
+    return 1  # external
+  fi
+  # Unparseable lines: treat as external to avoid false positives.
+  return 1
+}
+
 status=0
 for rel in "${files[@]}"; do
-  if ! clang-tidy "$rel" "${common_args[@]}" -p "$active_compile_db_dir" 2>&1; then
+  tidy_output="$(clang-tidy "$rel" "${common_args[@]}" -p "$active_compile_db_dir" 2>&1)" || true
+  first_party_fail=0
+  while IFS= read -r line; do
+    if _is_first_party_error "$line"; then
+      first_party_fail=1
+      break
+    fi
+  done <<< "$tidy_output"
+  if ((first_party_fail)); then
+    printf '%s\n' "$tidy_output"
     status=1
   fi
 done

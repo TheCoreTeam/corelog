@@ -122,6 +122,28 @@ if(NOT DEFINED CLANGD_CUDA_EXTRA_INCLUDE_DIRS)
 endif()
 
 # ---------------------------------------------------------------------------
+# Auto-detect external dependency include directories.
+# CMake generator expressions (e.g. $<BUILD_INTERFACE:...>) in target include
+# directories may fail to expand for CUDA response files when FetchContent has
+# not yet populated a dependency at configure time.  Scan project external/
+# directory for any *-src/include paths that are not already in the compile
+# commands and inject them so that clangd/clang-tidy can resolve headers like
+# <corelog/cublas_check.h>.
+# ---------------------------------------------------------------------------
+
+if(NOT DEFINED CLANGD_CUDA_EXTRA_INCLUDE_DIRS)
+    set(CLANGD_CUDA_EXTRA_INCLUDE_DIRS "")
+endif()
+
+file(GLOB _clangd_cuda_external_inc_candidates "${PROJECT_SOURCE_DIR}/external/*-src/include")
+foreach(_candidate IN LISTS _clangd_cuda_external_inc_candidates)
+    if(IS_DIRECTORY "${_candidate}" AND NOT _candidate IN_LIST CLANGD_CUDA_EXTRA_INCLUDE_DIRS)
+        list(APPEND CLANGD_CUDA_EXTRA_INCLUDE_DIRS "${_candidate}")
+        message(STATUS "ClangdCudaCompileDb: auto-detected external include: ${_candidate}")
+    endif()
+endforeach()
+
+# ---------------------------------------------------------------------------
 # Auto-detect conda environment include directories.
 # When building inside a conda environment, MPI/NCCL headers live under
 # $CONDA_PREFIX/include but are not explicitly listed in compile_commands.json
@@ -135,6 +157,19 @@ if(DEFINED ENV{CONDA_PREFIX})
     endif()
     list(APPEND CLANGD_CUDA_EXTRA_INCLUDE_DIRS "$ENV{CONDA_PREFIX}/include")
     message(STATUS "ClangdCudaCompileDb: auto-detected conda include: $ENV{CONDA_PREFIX}/include")
+
+    # Conda CUDA toolkit places headers under targets/<arch>/include/ rather
+    # than directly under $CONDA_PREFIX/include/.  Targets with fewer CUDA
+    # dependencies (benchmarks, examples) may not have this path in their
+    # compile commands, so clangd fails to resolve <cuda_runtime.h>.
+    file(GLOB _clangd_cuda_conda_targets_inc
+        "$ENV{CONDA_PREFIX}/targets/*/include")
+    foreach(_candidate IN LISTS _clangd_cuda_conda_targets_inc)
+        if(IS_DIRECTORY "${_candidate}" AND NOT _candidate IN_LIST CLANGD_CUDA_EXTRA_INCLUDE_DIRS)
+            list(APPEND CLANGD_CUDA_EXTRA_INCLUDE_DIRS "${_candidate}")
+            message(STATUS "ClangdCudaCompileDb: auto-detected CUDA targets include: ${_candidate}")
+        endif()
+    endforeach()
 endif()
 
 # ---------------------------------------------------------------------------
