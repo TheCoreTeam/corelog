@@ -357,13 +357,15 @@ endfunction()
 # clangd indexing is still needed for code navigation and completion.
 # ---------------------------------------------------------------------------
 
-add_custom_target(generate_clangd_db
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CLANGD_CUDA_OUTPUT_DIR}"
-    COMMAND "${Python3_EXECUTABLE}" "${_clangd_cuda_script}" ${_clangd_cuda_script_args}
-    COMMAND "${CMAKE_COMMAND}" -P "${_clangd_cuda_update_script}"
-    COMMENT "Generating clang-tooling compilation database and .clangd config (on-demand)"
-    VERBATIM
-)
+if(NOT TARGET generate_clangd_db)
+  add_custom_target(generate_clangd_db
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "${CLANGD_CUDA_OUTPUT_DIR}"
+      COMMAND "${Python3_EXECUTABLE}" "${_clangd_cuda_script}" ${_clangd_cuda_script_args}
+      COMMAND "${CMAKE_COMMAND}" -P "${_clangd_cuda_update_script}"
+      COMMENT "Generating clang-tooling compilation database and .clangd config (on-demand)"
+      VERBATIM
+  )
+endif()
 
 # ---------------------------------------------------------------------------
 # Pre-generate at configure time if the source database already exists.
