@@ -426,6 +426,11 @@ endif()
 # This means a simple 'cmake -B build .' is enough to produce a usable
 # clangd database; the user does not have to wait for (or succeed at)
 # building before clangd can index the project.
+#
+# For fresh configures where compile_commands.json has not been written yet
+# (CMake writes it at generate time, after all CMakeLists.txt processing),
+# start a background helper that polls for the file and generates the database
+# once it appears.  By the time cmake exits the database is ready.
 # ---------------------------------------------------------------------------
 
 if(EXISTS "${CLANGD_CUDA_SOURCE_DB}")
@@ -445,5 +450,34 @@ if(EXISTS "${CLANGD_CUDA_SOURCE_DB}")
         message(STATUS "ClangdCudaCompileDb: pre-generated clang-tooling database")
     endif()
 else()
-    message(STATUS "ClangdCudaCompileDb: source database not found yet; run cmake --build to generate it")
+    # compile_commands.json is not available yet — CMake writes it at generate
+    # time (after this module is included).  On UNIX, fork a background helper
+    # that waits for the file and generates the database so it is ready by the
+    # time cmake exits.  On non-UNIX platforms, fall back to build-time generation.
+    if(UNIX)
+        set(_clangd_cuda_bg_script "${PROJECT_BINARY_DIR}/_clangd_cuda_bg_gen.sh")
+        string(REPLACE ";" " " _clangd_cuda_bg_args "${_clangd_cuda_script_args}")
+        file(WRITE "${_clangd_cuda_bg_script}" "#!/bin/bash
+# ClangdCudaCompileDb background helper
+# Wait for compile_commands.json to appear (max 30s), then generate the
+# clang-tooling database.
+for _i in \$(seq 1 60); do
+    [ -f '${CLANGD_CUDA_SOURCE_DB}' ] && break
+    sleep 0.5
+done
+if [ -f '${CLANGD_CUDA_SOURCE_DB}' ]; then
+    mkdir -p '${CLANGD_CUDA_OUTPUT_DIR}'
+    '${Python3_EXECUTABLE}' '${_clangd_cuda_script}' ${_clangd_cuda_bg_args} 2>/dev/null
+    '${CMAKE_COMMAND}' -P '${_clangd_cuda_update_script}' 2>/dev/null
+fi
+")
+        file(CHMOD "${_clangd_cuda_bg_script}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+        execute_process(
+            COMMAND bash -c "'${_clangd_cuda_bg_script}' >/dev/null 2>&1 &"
+            OUTPUT_QUIET ERROR_QUIET
+        )
+        message(STATUS "ClangdCudaCompileDb: scheduled background database generation after generate")
+    else()
+        message(STATUS "ClangdCudaCompileDb: source database not found yet; run cmake --build to generate it")
+    endif()
 endif()
