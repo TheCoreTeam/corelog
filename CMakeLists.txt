@@ -48,7 +48,6 @@ target_include_directories(corelog
 )
 
 target_link_libraries(corelog PUBLIC spdlog::spdlog)
-clangd_cuda_attach(corelog)
 
 # ---------------------------------------------------------------------------
 # Tests

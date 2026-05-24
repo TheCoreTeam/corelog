@@ -14,7 +14,8 @@
 #   include(ClangdCudaCompileDb)              # must come AFTER project()
 #
 #   add_executable(my_app ...)
-#   clangd_cuda_attach(my_app)                # attach POST_BUILD hook
+#   # Database auto-regenerates via build-time DEPENDS tracking when
+#   # compile_commands.json changes (e.g. after reconfigure).
 # =============================================================================
 
 include_guard(GLOBAL)
@@ -51,8 +52,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL
     "Export compile_commands.json (forced by ClangdCudaCompileDb)" FORCE)
 
 # ---------------------------------------------------------------------------
-# Optional configuration variables (set before include(), or override after
-# include but before clangd_cuda_attach())
+# Optional configuration variables (set before include(), or override after)
 # ---------------------------------------------------------------------------
 
 if(NOT DEFINED CLANGD_CUDA_SOURCE_DB)
@@ -216,8 +216,8 @@ if(CLANGD_CUDA_PATH)
 endif()
 
 # ---------------------------------------------------------------------------
-# Unified argument list for the conversion script (used by POST_BUILD,
-# custom target, and configure-time pre-generation)
+# Unified argument list for the conversion script (used by the
+# DEPENDS-based target and configure-time pre-generation)
 # ---------------------------------------------------------------------------
 
 set(_clangd_cuda_script_args
@@ -385,40 +385,30 @@ if(CLANGD_CUDA_ENABLE_CLANGD_CONFIG)
 endif()
 
 # ---------------------------------------------------------------------------
-# Public API: attach a POST_BUILD hook to the given targets so the
-# clang-tooling compilation database is regenerated after each build.
-# ---------------------------------------------------------------------------
-
-function(clangd_cuda_attach)
-    foreach(_target IN LISTS ARGN)
-        if(NOT TARGET ${_target})
-            message(WARNING "clangd_cuda_attach: '${_target}' is not a target")
-            continue()
-        endif()
-        add_custom_command(TARGET ${_target} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "${CLANGD_CUDA_OUTPUT_DIR}"
-            COMMAND "${Python3_EXECUTABLE}" "${_clangd_cuda_script}" ${_clangd_cuda_script_args}
-            COMMAND "${CMAKE_COMMAND}" -P "${_clangd_cuda_update_script}"
-            COMMENT "Generating clang-tooling compilation database"
-            VERBATIM
-        )
-    endforeach()
-endfunction()
-
-# ---------------------------------------------------------------------------
-# Stand-alone target: generate the clang-tooling database on demand without
-# requiring a successful build. This is useful when compilation is broken but
-# clangd indexing is still needed for code navigation and completion.
+# Build-time generation: CMake-native file dependency tracking.
+#
+# The custom command depends on compile_commands.json (written by CMake at
+# generate time).  The build system (Make/Ninja) checks its timestamp and
+# only re-runs the conversion when the input has changed — i.e. after a
+# reconfigure that modified compile flags, source lists, etc.
+#
+# The ALL keyword ensures the target participates in every cmake --build,
+# but the DEPENDS check makes it a near-zero-cost no-op when nothing changed.
 # ---------------------------------------------------------------------------
 
 if(NOT TARGET generate_clangd_db)
-  add_custom_target(generate_clangd_db
-      COMMAND "${CMAKE_COMMAND}" -E make_directory "${CLANGD_CUDA_OUTPUT_DIR}"
-      COMMAND "${Python3_EXECUTABLE}" "${_clangd_cuda_script}" ${_clangd_cuda_script_args}
-      COMMAND "${CMAKE_COMMAND}" -P "${_clangd_cuda_update_script}"
-      COMMENT "Generating clang-tooling compilation database and .clangd config (on-demand)"
-      VERBATIM
-  )
+    add_custom_command(
+        OUTPUT "${_clangd_cuda_output_db}"
+        DEPENDS "${CLANGD_CUDA_SOURCE_DB}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CLANGD_CUDA_OUTPUT_DIR}"
+        COMMAND "${Python3_EXECUTABLE}" "${_clangd_cuda_script}" ${_clangd_cuda_script_args}
+        COMMAND "${CMAKE_COMMAND}" -P "${_clangd_cuda_update_script}"
+        COMMENT "Generating clang-tooling compilation database"
+        VERBATIM
+    )
+    add_custom_target(generate_clangd_db ALL
+        DEPENDS "${_clangd_cuda_output_db}"
+    )
 endif()
 
 # ---------------------------------------------------------------------------
